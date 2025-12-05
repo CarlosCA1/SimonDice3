@@ -24,14 +24,22 @@ fun IU(miViewModel: MyViewModel) {
 
         Text(miViewModel.msg.value, fontSize = 22.sp)
 
-        Row {
-            BotonColor(miViewModel, Colores.CLASE_ROJO)
-            BotonColor(miViewModel, Colores.CLASE_VERDE)
+        // Mostrar record si existe (ronda + fecha)
+        val record = miViewModel.recordState.value
+        if (record != null) {
+            Text("Record: ${record.maxRound}  (${record.formattedDateTime()})", fontSize = 14.sp)
+        } else {
+            Text("Record: —", fontSize = 14.sp)
         }
 
         Row {
-            BotonColor(miViewModel, Colores.CLASE_AZUL)
-            BotonColor(miViewModel, Colores.CLASE_AMARILLO)
+            BotonColor(miViewModel, Datos.Colores.CLASE_ROJO)
+            BotonColor(miViewModel, Datos.Colores.CLASE_VERDE)
+        }
+
+        Row {
+            BotonColor(miViewModel, Datos.Colores.CLASE_AZUL)
+            BotonColor(miViewModel, Datos.Colores.CLASE_AMARILLO)
         }
 
         Row {
@@ -42,7 +50,7 @@ fun IU(miViewModel: MyViewModel) {
 
 
 @Composable
-fun BotonColor(miViewModel: MyViewModel, enum_color: Colores) {
+fun BotonColor(miViewModel: MyViewModel, enum_color: Datos.Colores) {
 
     val isActive = miViewModel.iluminado.value == enum_color.ordinal
 

@@ -8,12 +8,8 @@ import com.example.simondice2.data.Record
  * ControladorPreferences: acceso a SharedPreferences (singleton) siguiendo el proyecto "Preferencias".
  *
  * Guarda dos claves:
- *  - KEY_RECORD_ROUND (Int) -> ronda máxima
- *  - KEY_RECORD_TIMESTAMP (Long) -> instante en milis en que se consiguió
- *
- * Comentarios y referencias:
- * - SharedPreferences (Android): https://developer.android.com/training/data-storage/shared-preferences
- * - androidx.core.content.edit extension: https://developer.android.com/jetpack/androidx/releases/core
+ *  - KEY_RECORD_ROUND (Int): ronda máxima
+ *  - KEY_RECORD_TIMESTAMP (Long): instante en milis en que se consiguió
  *
  * Diseñado para ser simple (sigue el patrón del proyecto subido). Si más adelante quieres
  * migrar a Room, podemos introducir un RecordRepository que delegue a este controlador.
@@ -28,8 +24,6 @@ object ControladorPreference {
      *
      * - Usamos edit{} de Android KTX para aplicar los cambios.
      * - Se ejecuta en el hilo que invoque la función; para no bloquear la UI, llama desde un dispatcher IO (ViewModel hace esto).
-     *
-     * Referencia edit{}: https://developer.android.com/kotlin/ktx
      */
     fun actualizarRecord(context: Context, nuevoRecord: Record) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -41,8 +35,6 @@ object ControladorPreference {
 
     /**
      * Obtiene el record actual; devuelve null si no existe (round <= 0).
-     *
-     * - Documentación SharedPreferences.getInt: https://developer.android.com/reference/android/content/SharedPreferences
      */
     fun obtenerRecord(context: Context): Record? {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
