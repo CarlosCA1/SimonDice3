@@ -1,18 +1,26 @@
 package com.example.simondice2
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue // Importa getValueimport androidx.compose.runtime.collectAsState // Importa collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.simondice2.data.GameRecord // Asegúrate de importar tu clase de datos renombrada
 
 @Composable
-fun IU(miViewModel: MyViewModel) {
+fun IU(vm: MyViewModel) {
+
+    // Recolecta los estados del ViewModel de la forma correcta
+    val ronda by vm.ronda.collectAsState()
+    val msg by vm.msg.collectAsState()
+    val recordState by vm.recordState.collectAsState()
+    val habilitado by vm.habilitado.collectAsState()
+    val iluminado by vm.iluminado.collectAsState()
+
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -20,60 +28,74 @@ fun IU(miViewModel: MyViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text("Score: ${miViewModel.ronda.value}", fontSize = 25.sp)
+        // Ahora usa las variables recolectadas, sin .value
+        Text("Ronda: $ronda", fontSize = 25.sp)
+        Text(msg, fontSize = 22.sp)
 
-        Text(miViewModel.msg.value, fontSize = 22.sp)
+        // El let sigue funcionando igual
+        recordState?.let { record ->
+            // Si quieres la función formattedDateTime(), debes crearla
+            // Por ejemplo, como una función de extensión en un fichero nuevo.
+            Text("Record: ${record.maxRound}", fontSize = 14.sp)
+        } ?: Text("Record: —", fontSize = 14.sp)
 
         Row {
-            BotonColor(miViewModel, Colores.CLASE_ROJO)
-            BotonColor(miViewModel, Colores.CLASE_VERDE)
+            // Pasa los estados recolectados a los componentes hijos
+            BotonColor(
+                color = Datos.Colores.CLASE_VERDE,
+                iluminado = iluminado,
+                habilitado = habilitado,
+                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_VERDE.ordinal) }
+            )
+            BotonColor(
+                color = Datos.Colores.CLASE_ROJO,
+                iluminado = iluminado,
+                habilitado = habilitado,
+                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_ROJO.ordinal) }
+            )
         }
 
         Row {
-            BotonColor(miViewModel, Colores.CLASE_AZUL)
-            BotonColor(miViewModel, Colores.CLASE_AMARILLO)
+            BotonColor(
+                color = Datos.Colores.CLASE_AZUL,
+                iluminado = iluminado,
+                habilitado = habilitado,
+                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_AZUL.ordinal) }
+            )
+            BotonColor(
+                color = Datos.Colores.CLASE_AMARILLO,
+                iluminado = iluminado,
+                habilitado = habilitado,
+                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_AMARILLO.ordinal) }
+            )
         }
 
-        Row {
-            BotonStart(miViewModel)
+        Button(onClick = { vm.startGame() }) {
+            Text("Empezar")
         }
     }
 }
 
-
 @Composable
-fun BotonColor(miViewModel: MyViewModel, enum_color: Colores) {
-
-    val isActive = miViewModel.iluminado.value == enum_color.ordinal
+fun BotonColor(
+    color: Datos.Colores,
+    iluminado: Int,
+    habilitado: Boolean,
+    onClick: () -> Unit
+) {
+    // La lógica ahora depende de los parámetros recibidos
+    val activo = iluminado == color.ordinal
 
     Button(
         colors = ButtonDefaults.buttonColors(
-            if (isActive) enum_color.color.copy(alpha = 0.40f)
-            else enum_color.color
+            containerColor = if (activo) color.color.copy(alpha = 0.4f) else color.color
         ),
-        enabled = miViewModel.habilitado.value,
-        onClick = {
-            Log.d("Juego", "Click!")
-            miViewModel.comprobarJugador(enum_color.ordinal)
-        },
+        enabled = habilitado,
+        onClick = onClick,
         modifier = Modifier
-            .size(180.dp, 100.dp)
-            .padding(10.dp)
+            .size(160.dp, 90.dp)
+            .padding(8.dp)
     ) {
-        Text(enum_color.txt, fontSize = 20.sp)
-    }
-}
-
-
-@Composable
-fun BotonStart(miViewModel: MyViewModel) {
-
-    Button(
-        onClick = { miViewModel.startGame() },
-        modifier = Modifier
-            .size(130.dp, 70.dp)
-            .padding(15.dp)
-    ) {
-        Text("Start", fontSize = 20.sp)
+        Text(color.txt)
     }
 }

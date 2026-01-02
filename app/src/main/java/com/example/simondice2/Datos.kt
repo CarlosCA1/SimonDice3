@@ -10,17 +10,13 @@ object Datos {
     var mensaje = "Pulsa Start"
     var botonesHabilitados = false
     var botonActivo = -1
-}
 
-/** Estados del juego */
-enum class Estado {
-    INICIO, SECUENCIA, ESPERANDO, ENTRADA, COMPROBANDO, FINALIZADO
-}
+    var record: java.lang.Record? = null
 
-/** Colores */
-enum class Colores(val color: Color, val txt: String) {
-    CLASE_VERDE(Color.Green, "verde"),      // 0
-    CLASE_ROJO(Color.Red, "vermello"),      // 1
-    CLASE_AZUL(Color.Blue, "azul"),         // 2
-    CLASE_AMARILLO(Color.Yellow, "amarelo") // 3
+    enum class Colores(val color: Color, val txt: String) {
+        CLASE_VERDE(Color.Green, "Verde"),
+        CLASE_ROJO(Color.Red, "Rojo"),
+        CLASE_AZUL(Color.Blue, "Azul"),
+        CLASE_AMARILLO(Color.Yellow, "Amarillo")
+    }
 }

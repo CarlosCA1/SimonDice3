@@ -1,95 +1,107 @@
-# Juego Simón Dice en Android (Jetpack Compose)
+# Simón Dice con Jetpack Compose, MVVM y Room
 
-Este proyecto implementa el clásico juego **Simón Dice** utilizando **Kotlin**, **Jetpack Compose** y el patrón **MVVM**.  
-El objetivo es que el jugador repita la secuencia de colores que muestra Simón, aumentando la dificultad en cada ronda.
+Este proyecto implementa el clásico juego **Simón Dice** utilizando tecnologías modernas de Android, incluyendo **Kotlin**, **Jetpack Compose** para la UI, el patrón de arquitectura **MVVM** y **Room** para la persistencia de datos.
 
 ---
 
-## Estructura del proyecto
+## Arquitectura General
 
-### `MainActivity`
-- Punto de entrada de la aplicación.
-- Inicializa el **ViewModel** (`MyViewModel`).
-- Configura la interfaz de usuario con `setContent { IU(miViewModel) }`.
-- Activa `enableEdgeToEdge()` para aprovechar toda la pantalla.
+La aplicación sigue el patrón MVVM (Model-View-ViewModel):
+
+- **View (UI)**: Compuesta por funciones Composable (`IU`, `BotonColor`, etc.) que observan el estado del ViewModel y le notifican las interacciones del usuario.
+- **ViewModel (`MyViewModel`)**: Contiene toda la lógica de negocio del juego y gestiona el estado de la UI. No tiene referencias a la UI, lo que facilita las pruebas y el mantenimiento.
+- **Model (Datos)**: Representado por la capa de persistencia con Room (`RecordRepository`, `RecordDao`, `RecordEntity`, `AppDatabase`).
 
 ---
 
 ### `MyViewModel`
-Clase que gestiona la **lógica del juego** y el estado:
 
-- **Estados observables**:
-    - `msg`: mensaje actual (ej. "Tu turno", "Bien!", "Has Perdido").
-    - `iluminado`: botón que se está iluminando.
-    - `habilitado`: controla si los botones están activos para el jugador.
-    - `ronda`: número de ronda actual.
+Es el cerebro de la aplicación. Gestiona la lógica del juego y expone el estado a la UI mediante `StateFlow`, siguiendo las mejores prácticas de Android.
 
-- **Funciones principales**:
-    - `startGame()`: reinicia el juego y comienza la primera ronda.
-    - `siguienteRonda()`: añade un nuevo color a la secuencia y prepara la ronda.
-    - `reproducirSecuencia()`: Simón muestra la secuencia iluminando los botones con retardos (`delay`).
-    - `comprobarJugador(color: Int)`: valida la entrada del jugador contra la secuencia.
-    - `gameOver()`: finaliza el juego mostrando el nivel alcanzado.
+- **Estado (`StateFlow`)**:
+    - `msg`: Mensaje informativo para el usuario.
+    - `iluminado`: El color del botón que se está iluminando.
+    - `habilitado`: Si los botones de colores son interactivos.
+    - `ronda`: La ronda actual.
+    - `recordState`: El récord de puntuación máxima, cargado desde la base de datos.
 
----
-
-### `IU`
-Composable que define la **interfaz gráfica**:
-
-- Muestra:
-    - El **score** (ronda actual).
-    - El **mensaje** del juego.
-- Contiene:
-    - Cuatro botones de colores (`BotonColor`).
-    - Un botón de inicio (`BotonStart`).
+- **Lógica del juego**:
+    - `startGame()`: Inicia una nueva partida.
+    - `siguienteRonda()`: Añade un color a la secuencia y la reproduce.
+    - `comprobarJugador()`: Valida la pulsación del jugador.
+    - `gameOver()`: Finaliza la partida y gestiona la actualización del récord si se ha superado.
 
 ---
 
-### `BotonColor`
-- Representa cada botón de color (rojo, verde, azul, amarillo).
-- Cambia de apariencia si está iluminado (`alpha` reducido).
-- Al pulsar:
-    - Llama a `comprobarJugador()`.
-    - Da feedback visual iluminando el botón brevemente.
+### Persistencia de Datos con Room
 
----
+Para guardar la puntuación máxima de forma persistente, se ha implementado la librería **Room**. Esta capa está formada por los siguientes componentes:
 
-### `BotonStart`
-- Reinicia el juego llamando a `startGame()`.
-- Botón más pequeño que los de colores.
+#### 1. `RecordEntity`
+Es una `data class` que define la estructura (el esquema) de la tabla `record` en la base de datos. Cada instancia de esta clase representa una fila en la tabla.
 
----
+```kotlin
+@Entity(tableName = "record")
+data class RecordEntity(
+    @PrimaryKey val id: Int = 1, // Clave primaria fija para tener siempre una única fila
+    val timestampMillis: Long,
+    val maxRound: Int
+)
+```
 
-### `Datos`
-Objeto que almacena el **estado global del juego**:
-- `ronda`: número de ronda actual.
-- `secuencia`: lista de colores que Simón debe mostrar.
-- `indiceJugador`: posición actual del jugador en la secuencia.
-- `mensaje`: texto mostrado en pantalla.
-- `botonesHabilitados`: indica si el jugador puede interactuar.
-- `botonActivo`: botón que se ilumina en cada momento.
+#### 2. `RecordDao` (Data Access Object)
+Es una `interface` donde se definen las consultas a la base de datos. Room genera automáticamente la implementación.
 
----
+- `getRecord()`: Obtiene el récord actual.
+- `insertRecord(record)`: Inserta o reemplaza el récord existente.
+- `deleteRecord()`: Borra el récord.
 
-### `Colores`
-Enum que define los colores del juego:
-- Verde (`CLASE_VERDE`)
-- Rojo (`CLASE_ROJO`)
-- Azul (`CLASE_AZUL`)
-- Amarillo (`CLASE_AMARILLO`)
+```kotlin
+@Dao
+interface RecordDao {
+    @Query("SELECT * FROM record WHERE id = 1")
+    suspend fun getRecord(): RecordEntity?
 
-Cada color tiene:
-- Un valor `Color` de Compose.
-- Un texto descriptivo.
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecord(record: RecordEntity)
+}
+```
 
----
+#### 3. `AppDatabase`
+Es la clase principal de la base de datos que hereda de `RoomDatabase`. Define qué `entities` (tablas) contiene la base de datos y proporciona acceso a los `DAO`.
 
-## Flujo del juego
-1. El jugador pulsa **Start**.
-2. Simón genera una secuencia y la muestra iluminando botones.
-3. El jugador debe repetir la secuencia correctamente.
-4. Si acierta toda la secuencia:
-    - Avanza a la siguiente ronda.
-    - La secuencia se alarga.
-5. Si falla:
-    - Se muestra **Game Over** con el nivel alcanzado.
+Se implementa como un **singleton** para asegurar que solo exista una instancia de la base de datos en toda la aplicación.
+
+```kotlin
+@Database(entities = [RecordEntity::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun recordDao(): RecordDao
+
+    companion object {
+        fun getDatabase(context: Context): AppDatabase { /* ... */ }
+    }
+}
+```
+
+#### 4. `RecordRepository`
+Actúa como una fachada (façade) que abstrae el origen de datos (`RecordDao`). El `ViewModel` solo interactúa con el `Repository`, sin saber los detalles de implementación de la base de datos. Esto facilita el testing y permite cambiar la implementación de la persistencia en el futuro sin afectar al resto de la app.
+
+```kotlin
+class RecordRepository(private val dao: RecordDao) {
+    suspend fun getRecord(): RecordEntity? = dao.getRecord()
+    suspend fun saveRecord(record: RecordEntity) = dao.insertRecord(record)
+}
+```
+
+### Integración en `MyViewModel`
+
+El `ViewModel` obtiene una instancia del `Repository` y lo utiliza para cargar y guardar el récord, siempre dentro de corrutinas en el dispatcher `Dispatchers.IO` para no bloquear el hilo principal.
+
+```kotlin
+// En MyViewModel
+private val repository: RecordRepository =
+    RecordRepository(AppDatabase.getDatabase(application).recordDao())
+
+// ... dentro de una corrutina
+repository.saveRecord(newRecord.toEntity())
+```
