@@ -21,6 +21,8 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
     private val _ronda = MutableStateFlow(0)
     private val _recordState = MutableStateFlow<GameRecord?>(null) // Usamos el nuevo nombre
 
+    private val _nombre = MutableStateFlow("")
+
     private val secuencia = mutableListOf<Int>()
     private var indiceJugador = 0
 
@@ -30,6 +32,8 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
     val habilitado: StateFlow<Boolean> = _habilitado.asStateFlow()
     val ronda: StateFlow<Int> = _ronda.asStateFlow()
     val recordState: StateFlow<GameRecord?> = _recordState.asStateFlow()
+
+    val nombre: StateFlow<String> = _nombre.asStateFlow()
 
     private val repository: RecordRepository =
         RecordRepository(AppDatabase.getDatabase(application).recordDao())
@@ -54,6 +58,7 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
         _ronda.value++
         indiceJugador = 0
         _habilitado.value = false
+        _nombre.value = "Carlos"
         _msg.value = "Simón muestra"
 
         secuencia.add((0..3).random())

@@ -21,6 +21,7 @@ fun IU(vm: MyViewModel) {
     val recordState by vm.recordState.collectAsState()
     val habilitado by vm.habilitado.collectAsState()
     val iluminado by vm.iluminado.collectAsState()
+    val nombre by vm.nombre.collectAsState()
 
 
     Column(
@@ -32,6 +33,7 @@ fun IU(vm: MyViewModel) {
         // Ahora usa las variables recolectadas, sin .value
         Text("Ronda: $ronda", fontSize = 25.sp)
         Text(msg, fontSize = 22.sp)
+        Text("Nombre: $nombre")
 
         // El let sigue funcionando igual
         recordState?.let { record ->
