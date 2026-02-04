@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import com.example.simondice2.data.GameRecord // Asegúrate de importar tu clase de datos renombrada
 
 @Composable
@@ -42,31 +43,31 @@ fun IU(vm: MyViewModel) {
         Row {
             // Pasa los estados recolectados a los componentes hijos
             BotonColor(
-                color = Datos.Colores.CLASE_VERDE,
+                color = Colores.CLASE_VERDE,
                 iluminado = iluminado,
                 habilitado = habilitado,
-                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_VERDE.ordinal) }
+                onClick = { vm.comprobarJugador(Colores.CLASE_VERDE.ordinal) }
             )
             BotonColor(
-                color = Datos.Colores.CLASE_ROJO,
+                color = Colores.CLASE_ROJO,
                 iluminado = iluminado,
                 habilitado = habilitado,
-                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_ROJO.ordinal) }
+                onClick = { vm.comprobarJugador(Colores.CLASE_ROJO.ordinal) }
             )
         }
 
         Row {
             BotonColor(
-                color = Datos.Colores.CLASE_AZUL,
+                color = Colores.CLASE_AZUL,
                 iluminado = iluminado,
                 habilitado = habilitado,
-                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_AZUL.ordinal) }
+                onClick = { vm.comprobarJugador(Colores.CLASE_AZUL.ordinal) }
             )
             BotonColor(
-                color = Datos.Colores.CLASE_AMARILLO,
+                color = Colores.CLASE_AMARILLO,
                 iluminado = iluminado,
                 habilitado = habilitado,
-                onClick = { vm.comprobarJugador(Datos.Colores.CLASE_AMARILLO.ordinal) }
+                onClick = { vm.comprobarJugador(Colores.CLASE_AMARILLO.ordinal) }
             )
         }
 
@@ -78,7 +79,7 @@ fun IU(vm: MyViewModel) {
 
 @Composable
 fun BotonColor(
-    color: Datos.Colores,
+    color: Colores,
     iluminado: Int,
     habilitado: Boolean,
     onClick: () -> Unit
