@@ -39,7 +39,7 @@ fun IU(vm: MyViewModel) {
         recordState?.let { record ->
             // Si quieres la función formattedDateTime(), debes crearla
             // Por ejemplo, como una función de extensión en un fichero nuevo.
-            Text("Record: ${record.maxRound}", fontSize = 14.sp)
+            Text("Record: ${record.maxRound}  -  ${record.nombreJugador}", fontSize = 14.sp)
         } ?: Text("Record: —", fontSize = 14.sp)
 
         Row {
