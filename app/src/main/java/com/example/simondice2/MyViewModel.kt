@@ -1,12 +1,16 @@
 package com.example.simondice2
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class MyViewModel : ViewModel() {
+class MyViewModel(context: Context) : ViewModel() {
+
+    private val repo = ScoreRepository(context)
+    var record = mutableStateOf(repo.obtenerRecord())
 
     var msg = mutableStateOf(Datos.mensaje)
     var iluminado = mutableStateOf(Datos.botonActivo)
@@ -105,6 +109,11 @@ class MyViewModel : ViewModel() {
     private fun gameOver() {
         Datos.botonesHabilitados = false
         habilitado.value = false
+
+        // Guardar puntuación
+        repo.guardarPuntuacion(Datos.ronda)
+        // Actualizar récord
+        record.value = repo.obtenerRecord()
 
         Datos.mensaje = "¡Has Perdido! Nivel: ${Datos.ronda}"
         msg.value = Datos.mensaje

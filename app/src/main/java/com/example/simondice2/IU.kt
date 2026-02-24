@@ -22,6 +22,8 @@ fun IU(miViewModel: MyViewModel) {
 
         Text("Score: ${miViewModel.ronda.value}", fontSize = 25.sp)
 
+        Text("Record: ${miViewModel.record.value}", fontSize = 22.sp)
+
         Text(miViewModel.msg.value, fontSize = 22.sp)
 
         Row {
