@@ -1,112 +1,130 @@
 package com.example.simondice2
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.simondice2.data.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
 
-class MyViewModel : ViewModel() {
+class MyViewModel(application: Application) : AndroidViewModel(application) {
 
-    var msg = mutableStateOf(Datos.mensaje)
-    var iluminado = mutableStateOf(Datos.botonActivo)
-    var habilitado = mutableStateOf(Datos.botonesHabilitados)
-    var ronda = mutableStateOf(Datos.ronda)
+    // Variable para cambiar el nombre
+    private val nombreJugador = "Carlos"
 
-    /** Iniciar juego */
+    // 1. Estado interno y privado del ViewModel
+    private val _msg = MutableStateFlow("Toca 'Empezar' para jugar")
+    private val _iluminado = MutableStateFlow(-1) // -1 significa ningún botón iluminado
+    private val _habilitado = MutableStateFlow(false)
+    private val _ronda = MutableStateFlow(0)
+    private val _recordState = MutableStateFlow<GameRecord?>(null) // Usamos el nuevo nombre
+
+    private val secuencia = mutableListOf<Int>()
+    private var indiceJugador = 0
+
+    // 2. Estado público e inmutable para la UI
+    val msg: StateFlow<String> = _msg.asStateFlow()
+    val iluminado: StateFlow<Int> = _iluminado.asStateFlow()
+    val habilitado: StateFlow<Boolean> = _habilitado.asStateFlow()
+    val ronda: StateFlow<Int> = _ronda.asStateFlow()
+    val recordState: StateFlow<GameRecord?> = _recordState.asStateFlow()
+
+    private val repository: RecordRepository =
+        RecordRepository(AppDatabase.getDatabase(application).recordDao())
+
+    init {
+        // Carga el récord inicial desde la base de datos
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getRecord()?.let { entity ->
+                _recordState.value = entity.toDomain() // toDomain() ahora devuelve un GameRecord
+            }
+        }
+    }
+
     fun startGame() {
-        Datos.secuencia.clear()
-        Datos.ronda = 0
-        Datos.indiceJugador = 0
+        secuencia.clear()
+        _ronda.value = 0
+        indiceJugador = 0
         siguienteRonda()
     }
 
-    /** Nueva ronda */
     private fun siguienteRonda() {
+        _ronda.value++
+        indiceJugador = 0
+        _habilitado.value = false
+        _msg.value = "Simón muestra"
 
-        Datos.ronda++
-        ronda.value = Datos.ronda
-
-        Datos.indiceJugador = 0
-        Datos.botonesHabilitados = false
-        habilitado.value = false
-
-        Datos.mensaje = "Simón muestra"
-        msg.value = Datos.mensaje
-
-        Datos.secuencia.add((0..3).random())
-
+        secuencia.add((0..3).random())
         reproducirSecuencia()
     }
 
-    /** Simón reproduce la secuencia */
     private fun reproducirSecuencia() {
-
         viewModelScope.launch {
-
-            for (n in Datos.secuencia) {
-
-                Datos.botonActivo = n
-                iluminado.value = Datos.botonActivo
+            for (color in secuencia) {
+                _iluminado.value = color
                 delay(500)
-
-                Datos.botonActivo = -1
-                iluminado.value = Datos.botonActivo
+                _iluminado.value = -1 // Apaga el botón
                 delay(250)
             }
-
-            Datos.mensaje = "Tu turno"
-            msg.value = Datos.mensaje
-
-            Datos.botonesHabilitados = true
-            habilitado.value = true
+            _msg.value = "Tu turno"
+            _habilitado.value = true
         }
     }
 
-    /** El jugador pulsa un botón */
     fun comprobarJugador(color: Int) {
+        if (!_habilitado.value) return // Comprueba el estado del ViewModel
 
-        if (!Datos.botonesHabilitados) return
-
-        // iluminar para feedback
-        Datos.botonActivo = color
-        iluminado.value = Datos.botonActivo
-
+        // Ilumina el botón que pulsa el jugador
         viewModelScope.launch {
+            _iluminado.value = color
             delay(300)
-            Datos.botonActivo = -1
-            iluminado.value = -1
+            _iluminado.value = -1
         }
 
-        // comprobar si coincide
-        if (color == Datos.secuencia[Datos.indiceJugador]) {
-
-            Datos.indiceJugador++
-
-            if (Datos.indiceJugador == Datos.secuencia.size) {
-                Datos.botonesHabilitados = false
-                habilitado.value = false
-
-                Datos.mensaje = "Bien!"
-                msg.value = Datos.mensaje
-
+        if (color == secuencia[indiceJugador]) {
+            indiceJugador++
+            // Si el jugador ha completado la secuencia de la ronda
+            if (indiceJugador == secuencia.size) {
+                _habilitado.value = false
+                _msg.value = "¡Bien!"
                 viewModelScope.launch {
                     delay(800)
                     siguienteRonda()
                 }
             }
-
         } else {
             gameOver()
         }
     }
 
-    /** Game Over */
     private fun gameOver() {
-        Datos.botonesHabilitados = false
-        habilitado.value = false
+        _habilitado.value = false
+        _msg.value = "¡Has perdido! Nivel: ${_ronda.value}"
+        val rondaLlegada = _ronda.value
 
-        Datos.mensaje = "¡Has Perdido! Nivel: ${Datos.ronda}"
-        msg.value = Datos.mensaje
+        viewModelScope.launch(Dispatchers.IO) {
+            val mejorActual = _recordState.value?.maxRound ?: 0
+            if (rondaLlegada > mejorActual) {
+                val newRecord = GameRecord( // Usamos el nuevo nombre
+                    timestampMillis = Instant.now().toEpochMilli(),
+                    maxRound = rondaLlegada,
+                    nombreJugador = nombreJugador // Guardamos el nombre actual
+                )
+                repository.saveRecord(newRecord.toEntity()) // toEntity() debe aceptar un GameRecord
+                _recordState.value = newRecord
+            }
+        }
+    }
+
+    fun resetRecord() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteRecord()
+            _recordState.value = null
+        }
     }
 }
