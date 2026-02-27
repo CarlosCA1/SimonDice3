@@ -1,13 +1,14 @@
 package com.example.simondice2
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class MyViewModel(context: Context) : ViewModel() {
+class MyViewModel(val context: Context) : ViewModel() {
 
     private val repo = ScoreRepository(context)
     var record = mutableStateOf(repo.obtenerRecord())
@@ -110,6 +111,10 @@ class MyViewModel(context: Context) : ViewModel() {
         Datos.botonesHabilitados = false
         habilitado.value = false
 
+        // Usamos la función del repo para el Logcat
+        if (repo.esTopDiez(Datos.ronda)) {
+            Log.d("Juego", "¡Felicidades! Formas parte de los diez primeros")
+        }
         // Guardar puntuación
         repo.guardarPuntuacion(Datos.ronda)
         // Actualizar récord
