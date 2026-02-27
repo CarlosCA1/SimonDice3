@@ -15,7 +15,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [RecordEntity::class], // Lista de todas las entidades (tablas) que pertenecen a esta base de datos.
-    version = 1,                      // Versión de la base de datos. Debe incrementarse al cambiar el esquema.
+    version = 3,                      // Versión de la base de datos. Debe incrementarse al cambiar el esquema.
     exportSchema = false              // Desactiva la exportación del esquema. Para un proyecto real, se recomienda mantenerlo en `true`.
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -62,6 +62,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,    // La clase de la base de datos.
                     "simondice_db"              // El nombre del fichero de la base de datos en el dispositivo.
                 )
+                    .fallbackToDestructiveMigration()
                 .build()
                 .also { INSTANCE = it } // Asigna la nueva instancia y la devuelve.
             }

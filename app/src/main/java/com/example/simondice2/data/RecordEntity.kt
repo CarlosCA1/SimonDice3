@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class RecordEntity(
     @PrimaryKey val id: Int = 1,
     val timestampMillis: Long,
-    val maxRound: Int
+    val maxRound: Int,
+    val nombreJugador: String
 )

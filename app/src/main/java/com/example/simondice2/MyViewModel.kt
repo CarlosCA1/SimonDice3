@@ -14,6 +14,9 @@ import java.time.Instant
 
 class MyViewModel(application: Application) : AndroidViewModel(application) {
 
+    // Variable para cambiar el nombre
+    private val nombreJugador = "Carlos"
+
     // 1. Estado interno y privado del ViewModel
     private val _msg = MutableStateFlow("Toca 'Empezar' para jugar")
     private val _iluminado = MutableStateFlow(-1) // -1 significa ningún botón iluminado
@@ -109,7 +112,8 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
             if (rondaLlegada > mejorActual) {
                 val newRecord = GameRecord( // Usamos el nuevo nombre
                     timestampMillis = Instant.now().toEpochMilli(),
-                    maxRound = rondaLlegada
+                    maxRound = rondaLlegada,
+                    nombreJugador = nombreJugador // Guardamos el nombre actual
                 )
                 repository.saveRecord(newRecord.toEntity()) // toEntity() debe aceptar un GameRecord
                 _recordState.value = newRecord
